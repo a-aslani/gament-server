@@ -3,7 +3,6 @@ package middleware
 import (
 	"Server/app/constants"
 	"Server/app/response"
-	"Server/app/utility"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -24,7 +23,8 @@ func UserAccessToken() gin.HandlerFunc {
 			c.Abort()
 		} else {
 			token, err := jwt.Parse(c.GetHeader(HeaderAuthorization), func(token *jwt.Token) (interface{}, error) {
-				return utility.VerifyKey, nil
+				//return utility.VerifyKey, nil
+				return []byte(constants.SecretKeyHS512), nil
 			})
 			if err == nil {
 				if token.Valid {
@@ -49,7 +49,8 @@ func AdminAndOwnerAccessToken() gin.HandlerFunc {
 			c.Abort()
 		} else {
 			token, err := jwt.Parse(c.GetHeader(HeaderAuthorization), func(token *jwt.Token) (interface{}, error) {
-				return utility.VerifyKey, nil
+				//return utility.VerifyKey, nil
+				return []byte(constants.SecretKeyHS512), nil
 			})
 			if err == nil {
 				if token.Valid {

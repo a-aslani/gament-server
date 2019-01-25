@@ -18,8 +18,8 @@ func New() *gin.Engine {
 	config := cors.DefaultConfig()
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Register", "Authorization"}
-	//config.AllowAllOrigins = true
-	config.AllowOrigins = []string{"http://localhost:8080"}
+	config.AllowAllOrigins = true
+	//config.AllowOrigins = []string{"http://localhost:8080", "http://192.168.1.6:1535"}
 	// config.AllowOrigins == []string{"http://google.com", "http://facebook.com"}
 	r.Use(cors.New(config))
 
@@ -32,7 +32,7 @@ func New() *gin.Engine {
 		v1.POST("/phone", controllerV1.GetPhoneNumber)
 
 		//Check active code
-		v1.GET("/code", controllerV1.CheckCode)
+		v1.POST("/code/:phone", controllerV1.CheckCode)
 		//Create new code
 		v1.POST("/code", controllerV1.RenewCode)
 
@@ -45,7 +45,7 @@ func New() *gin.Engine {
 
 		//Find game
 		v1.GET("/games/:key", controllerV1.FindGame)
-		//Find All Games
+		//Find all games
 		v1.GET("/games", controllerV1.FindAllGames)
 		//Create game
 		v1.POST("/games", middleware.AdminAndOwnerAccessToken(), controllerV1.CreateGame)

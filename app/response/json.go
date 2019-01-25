@@ -46,8 +46,9 @@ type (
 		Document interface{} `json:"document"`
 	}
 	FindAllDocuments struct {
-		Documents  []map[string]interface{} `json:"documents"`
-		TotalPages float64                  `json:"total_pages"`
+		Documents   []map[string]interface{} `json:"documents"`
+		TotalPages  float64                  `json:"total_pages"`
+		CurrentPage int64                    `json:"current_page"`
 	}
 	DestroyDocument struct {
 		Message string `json:"message"`

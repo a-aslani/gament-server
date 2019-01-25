@@ -113,6 +113,7 @@ func FindAllGames(c *gin.Context) {
 		Data: &response.FindAllDocuments{
 			Documents:  games,
 			TotalPages: pages,
+			CurrentPage: page,
 		},
 		State: true,
 	})

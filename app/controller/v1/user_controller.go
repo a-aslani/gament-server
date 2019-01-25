@@ -90,21 +90,21 @@ func GetPhoneNumber(c *gin.Context) {
 //Check active code from client and validate
 func CheckCode(c *gin.Context) {
 
-	phoneKeyQuery := strings.TrimSpace(c.Query("phone"))
-	activeCodeQuery := strings.TrimSpace(c.Query("code"))
+	phoneKeyParam := strings.TrimSpace(c.Param("phone"))
+	activeCodePost := strings.TrimSpace(c.PostForm("code"))
 
 	//Validation Queries
-	if phoneKeyQuery == "" {
+	if phoneKeyParam == "" {
 		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: "کلید شماره تماس الزامی است"}})
 		return
-	} else if activeCodeQuery == "" {
+	} else if activeCodePost == "" {
 		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: "کد فعالسازی الزامی است"}})
 		return
 	}
 
-	code, _ := strconv.Atoi(activeCodeQuery)
+	code, _ := strconv.Atoi(activeCodePost)
 
-	phoneId := driver.NewDocumentID(constants.Phones, phoneKeyQuery)
+	phoneId := driver.NewDocumentID(constants.Phones, phoneKeyParam)
 
 	//Search PHONE ID in users GRAPH by phone_to_code TYPE
 	if codeDoc, found := database.Builder().Graph(constants.UsersGraph).From(phoneId).Type(constants.PhoneToCode).Build().FindItemInGraph(); !found {
