@@ -1,6 +1,7 @@
 package constants
 
 const (
-	ImageGame = "game"
-	ImageUser = "user"
+	ImageGame   = "game"
+	ImageUser   = "user"
+	ImageBanner = "banner"
 )

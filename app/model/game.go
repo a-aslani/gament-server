@@ -9,16 +9,18 @@ import (
 )
 
 type Game struct {
-	Image       string `json:"image" form:"image"`
-	Name        string `json:"name" form:"name" binding:"required"`
-	Description string `json:"description"`
-	PC          bool   `json:"pc"`
-	PS          bool   `json:"ps"`
-	Xbox        bool   `json:"xbox"`
-	Mobile      bool   `json:"mobile"`
-	Approved    bool   `json:"approved"`
-	CreatedAt   int64  `json:"created_at"`
-	UpdatedAt   int64  `json:"updated_at"`
+	Image        string `json:"image" form:"image"`
+	Name         string `json:"name" form:"name" binding:"required"`
+	Description  string `json:"description" form:"description" binding:"required"`
+	MobileBanner string `json:"mobile_banner" form:"mobile_banner"`
+	WebBanner    string `json:"web_banner" form:"web_banner"`
+	PC           bool   `json:"pc"`
+	PS           bool   `json:"ps"`
+	Xbox         bool   `json:"xbox"`
+	Mobile       bool   `json:"mobile"`
+	Approved     bool   `json:"approved"`
+	CreatedAt    int64  `json:"created_at"`
+	UpdatedAt    int64  `json:"updated_at"`
 }
 
 func (game *Game) find(key string) (map[string]interface{}, error) {
@@ -36,7 +38,7 @@ func (game *Game) find(key string) (map[string]interface{}, error) {
 func (game *Game) findAll(count, page int64) ([]map[string]interface{}, error) {
 
 	query := `FOR v IN ` + constants.Games + ` FILTER v.approved == true SORT v.created_at DESC LIMIT @offset, @count RETURN 
-		{key: v._key, image: v.image, name: v.name, description: v.description, pc: v.pc, ps: v.ps, xbox: v.xbox, mobile: v.mobile, created_at: v.created_at, updated_at: v.updated_at}`
+		{key: v._key, image: v.image, name: v.name, description: v.description, pc: v.pc, ps: v.ps, xbox: v.xbox, mobile: v.mobile, mobile_banner: v.mobile_banner, web_banner: v.web_banner, created_at: v.created_at, updated_at: v.updated_at}`
 
 	bindVars := map[string]interface{}{
 		"offset": (page - 1) * count,

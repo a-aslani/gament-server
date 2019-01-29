@@ -10,18 +10,19 @@ import (
 
 type Tournament struct {
 	Name       string `json:"name" form:"name" binding:"required"`
-	Type       string `json:"type" form:"type" binding:"required,numeric,max=1,min=1"`
-	GameKey    string `json:"game_key" form:"game_key" binding:"required,numeric"`
-	RuleKey    string `json:"rule_key" form:"rule_key" binding:"required,numeric"`
-	Ticket     string `json:"ticket" form:"ticket" binding:"required,numeric"`
-	Quantity   string `json:"quantity" form:"quantity" binding:"required,numeric"`
-	Category   string `json:"category" form:"category" binding:"required,numeric,max=1,min=1"`
+	Type       int    `json:"type" form:"type" binding:"required,max=4,min=1"`
+	GameKey    string `json:"game_key" form:"game_key" binding:"required"`
+	RuleKey    string `json:"rule_key" form:"rule_key" binding:"required"`
+	Ticket     int    `json:"ticket" form:"ticket"`
+	Quantity   int    `json:"quantity" form:"quantity" binding:"required"`
+	Platform   string `json:"platform" form:"platform" binding:"required"`
+	Members    int    `json:"members"`
 	Sum        int    `json:"sum"`
 	Income     int    `json:"income"`
 	Percentage string `json:"percentage" form:"percentage" binding:"required,numeric,max=100,min=1"`
 	Award      int    `json:"award"`
 	State      int    `json:"state"`
-	Approved     bool   `json:"approved"`
+	Approved   bool   `json:"approved"`
 	CreatedAt  int64  `json:"created_at"`
 	UpdatedAt  int64  `json:"updated_at"`
 }

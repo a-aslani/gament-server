@@ -31,7 +31,7 @@ func GetPhoneNumber(c *gin.Context) {
 	activeCode := utility.GenerateRandomCode()
 
 	//Search PHONE NUMBER of c.phonePost in phones collection
-	if phoneDoc, found := database.Builder().Collection(constants.Phones).Filter("phone", "==", phone.Phone).Build().FindItem(); !found {
+	if phoneDoc, found := database.FindItemByCondition(constants.Phones, "phone", "==", phone.Phone); !found {
 
 		//Create new phonePost
 		phoneId, err := model.Create(&phone)
@@ -53,7 +53,7 @@ func GetPhoneNumber(c *gin.Context) {
 				return
 			} else {
 
-				//TODO send active code SMS to user phone.Phone
+				//TODO send active code by SMS to user phone.Phone
 				c.JSON(http.StatusOK, &response.Data{
 					Data: &response.SendActiveCode{
 						PhoneKey: phoneId.Key(),
@@ -64,9 +64,11 @@ func GetPhoneNumber(c *gin.Context) {
 		}
 
 	} else {
+
 		phoneId := driver.NewDocumentID(constants.Phones, phoneDoc["_key"].(string))
+
 		//Search code in users GRAPH by PHONE ID with phone_to_code TYPE
-		if code, state := database.Builder().From(phoneId).Graph(constants.UsersGraph).Type(constants.PhoneToCode).Build().FindItemInGraph(); !state {
+		if code, found := database.FindItemInGraph(constants.UsersGraph, phoneId, constants.PhoneToCode); !found {
 			c.JSON(http.StatusNotFound, &response.Data{Data: &response.DatabaseError{Message: "رکوردی با این شماره تماس یافت نشد"}})
 			return
 		} else {
@@ -76,7 +78,7 @@ func GetPhoneNumber(c *gin.Context) {
 				return
 			}
 
-			//TODO send active code SMS to user phone.Phone
+			//TODO send active code by SMS to user phone.Phone
 			c.JSON(http.StatusOK, &response.Data{
 				Data: &response.SendActiveCode{
 					PhoneKey: phoneDoc["_key"].(string),
@@ -107,7 +109,7 @@ func CheckCode(c *gin.Context) {
 	phoneId := driver.NewDocumentID(constants.Phones, phoneKeyParam)
 
 	//Search PHONE ID in users GRAPH by phone_to_code TYPE
-	if codeDoc, found := database.Builder().Graph(constants.UsersGraph).From(phoneId).Type(constants.PhoneToCode).Build().FindItemInGraph(); !found {
+	if codeDoc, found := database.FindItemInGraph(constants.UsersGraph, phoneId, constants.PhoneToCode); !found {
 		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ServerError{Message: "کدی برای این شماره تماس یافت نشد"}})
 		return
 	} else {
@@ -124,8 +126,7 @@ func CheckCode(c *gin.Context) {
 			}
 
 			//Search PHONE ID in users GRAPH by phone_to_user TYPE
-			builder := database.Builder().Graph(constants.UsersGraph).From(phoneId).Type(constants.PhoneToUser).Build()
-			if userDoc, found := builder.FindItemInGraph(); found {
+			if userDoc, found := database.FindItemInGraph(constants.UsersGraph, phoneId, constants.PhoneToUser); found {
 
 				token := utility.Token(userDoc["_key"].(string), constants.UserRole)
 
@@ -167,7 +168,7 @@ func RenewCode(c *gin.Context) {
 	phoneId := driver.NewDocumentID(constants.Phones, phoneKeyPost)
 
 	//Search code  by PHONE ID in users GRAPH with phone_to_code TYPE
-	if codeDoc, found := database.Builder().Graph(constants.UsersGraph).From(phoneId).Type(constants.PhoneToCode).Build().FindItemInGraph(); !found {
+	if codeDoc, found := database.FindItemInGraph(constants.UsersGraph, phoneId, constants.PhoneToCode); !found {
 		c.JSON(http.StatusNotFound, &response.Data{Data: &response.DatabaseError{Message: "اطلاعاتی برای این شماره تماس یافت نشد"}})
 		return
 	} else {
@@ -212,7 +213,7 @@ func CreateUser(c *gin.Context) {
 	phoneId := driver.NewDocumentID(constants.Phones, phoneKey)
 
 	//Check user is new or not
-	if _, found := database.Builder().Graph(constants.UsersGraph).From(phoneId).Type(constants.PhoneToUser).Build().FindItemInGraph(); found {
+	if _, found := database.FindItemInGraph(constants.UsersGraph, phoneId, constants.PhoneToUser); found {
 		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: "این کاربر قبلا ثبت نام کرده است"}})
 		return
 	}
@@ -225,7 +226,7 @@ func CreateUser(c *gin.Context) {
 	}
 
 	//Check exist username
-	if _, found := database.Builder().Collection(constants.Users).Filter("username", "==", user.Username).Build().FindItem(); found {
+	if _, found := database.FindItemByCondition(constants.Users, "username", "==", user.Username); found {
 		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: "نام کاربری قبلا ثبت شده است"}})
 		return
 	}
@@ -294,7 +295,8 @@ func CheckUsername(c *gin.Context) {
 		return
 	}
 
-	if _, found := database.Builder().Collection(constants.Users).Filter("username", "==", usernamePost).Build().FindItem(); found {
+	//Find username in database
+	if _, found := database.FindItemByCondition(constants.Users, "username", "==", usernamePost); found {
 		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: "نام کاربری قبلا ثبت شده است"}})
 		return
 	}

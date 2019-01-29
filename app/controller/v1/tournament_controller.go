@@ -3,28 +3,44 @@ package controllerV1
 import (
 	"Server/app/constants"
 	"Server/app/model"
+	"Server/app/model/database"
 	"Server/app/response"
+	"Server/app/utility"
+	"Server/app/utility/jalali"
+	"github.com/arangodb/go-driver"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
-	"github.com/arangodb/go-driver"
 )
 
 //Create new tournament
 func CreateTournament(c *gin.Context) {
 
+	ticketForm := c.PostForm("ticket")
+
 	//Validation
 	var tournament model.Tournament
+
+	if ticketForm == "" {
+		tournament.Ticket = 0
+	} else {
+		tournament.Ticket, _ = strconv.Atoi(ticketForm)
+	}
+
 	if err := c.ShouldBind(&tournament); err != nil {
 		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: err.Error()}})
 		return
 	}
 
+	//Platform to upper case
+	tournament.Platform = strings.ToUpper(strings.TrimSpace(c.PostForm("platform")))
+
 	t := time.Now().Unix()
 
-	ticket, _ := strconv.Atoi(c.PostForm("ticket"))
-	totalCount, _ := strconv.Atoi(c.PostForm("total_count"))
+	ticket := tournament.Ticket
+	quantity := tournament.Quantity
 
 	if ticket == 0 {
 		tournament.Sum = 0
@@ -32,16 +48,17 @@ func CreateTournament(c *gin.Context) {
 		tournament.Income = 0
 		tournament.Award = 0
 	} else {
-		percent, _ := strconv.Atoi(c.PostForm("percentage_of_dividends"))
-		total := ticket * totalCount
+		percent, _ := strconv.Atoi(c.PostForm("percentage"))
+		total := ticket * quantity
 		tournament.Percentage = "%" + strconv.Itoa(percent)
-		tournament.Award = total - (((ticket * totalCount) * percent) / 100)
+		tournament.Award = total - (((ticket * quantity) * percent) / 100)
 		tournament.Income = total - tournament.Award
 		tournament.Sum = total
 	}
 
 	tournament.Approved = true
 	tournament.State = constants.RegistrationState
+	tournament.Members = 0
 	tournament.CreatedAt = t
 	tournament.UpdatedAt = t
 
@@ -81,4 +98,65 @@ func CreateTournament(c *gin.Context) {
 		},
 		State: true,
 	})
+}
+
+//Find all tournaments by paging
+func FindAllTournaments(c *gin.Context) {
+
+	page, _ := strconv.ParseInt(c.DefaultQuery("page", "1"), 0, 64)
+	gameKey := c.Param("game")
+
+	gameId := driver.NewDocumentID(constants.Games, gameKey)
+
+	//Find tournaments for game in graph by paging
+	if tournamentsDoc, found := database.FindItemsInGraph(constants.GamesGraph, gameId, constants.GameToTournament, page, constants.TournamentsCount); !found {
+		c.JSON(http.StatusOK, &response.Data{Data: &response.ValidationError{Error: "رقابتی برای این بازی وجود ندارد"}})
+		return
+	} else {
+
+		//Get total tournaments count
+		count, err := database.TotalCount(constants.GamesGraph, gameId, constants.GameToTournament)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &response.Data{Data: &response.ServerError{Message: "مشکل در دریافت تعداد رقابت ها"}})
+			return
+		}
+
+		pages := utility.Pages(count, constants.TournamentsCount)
+
+		var tournaments []map[string]interface{}
+
+		//Remove some data for json
+		for i, v := range tournamentsDoc {
+
+			delete(tournamentsDoc[i], "_id")
+			delete(tournamentsDoc[i], "_rev")
+			delete(tournamentsDoc[i], "approved")
+			tournamentsDoc[i]["key"] = v["_key"]
+			delete(tournamentsDoc[i], "_key")
+
+			utc, _ := time.LoadLocation("UTC")
+			t := time.Unix(int64(v["created_at"].(float64)), 0)
+			t = t.In(utc)
+			tournamentsDoc[i]["date"] = jalali.Strftime("%A, %e %b %Y %H:%M", t)
+
+			tournaments = append(tournaments, tournamentsDoc[i])
+		}
+
+		if tournaments == nil {
+			c.JSON(http.StatusOK, &response.Data{
+				Data: &response.EmptyDocument{Message: "هیچ رقابتی برای این بازی وجود ندارد"},
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, &response.Data{
+			Data: &response.FindAllDocuments{
+				Documents:   tournaments,
+				TotalPages:  pages,
+				CurrentPage: page,
+			},
+			State: true,
+		})
+	}
+
 }

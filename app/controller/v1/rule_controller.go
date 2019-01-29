@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-//Create Role
+//Create Rule
 func CreateRule(c *gin.Context) {
 
 	var rule model.Rule
@@ -22,13 +22,13 @@ func CreateRule(c *gin.Context) {
 
 	ruleID, err := model.Create(&rule)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, &response.Data{Data: &response.ServerError{Message: "create new rule failed"}})
+		c.JSON(http.StatusInternalServerError, &response.Data{Data: &response.ServerError{Message: "مشکل در ایجاد قوانین جدید"}})
 		return
 	}
 
 	c.JSON(http.StatusOK, &response.Data{
 		Data: &response.CreateDocument{
-			Message: "Rule successfully created",
+			Message: "قوانین جدید با موفقیت ایجاد شد",
 			Key:     ruleID.Key(),
 		},
 		State: true,

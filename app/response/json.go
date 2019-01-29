@@ -53,4 +53,7 @@ type (
 	DestroyDocument struct {
 		Message string `json:"message"`
 	}
+	EmptyDocument struct {
+		Message string `json:"message"`
+	}
 )

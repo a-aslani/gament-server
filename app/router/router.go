@@ -11,17 +11,7 @@ func New() *gin.Engine {
 
 	r := gin.Default()
 
-	// - No origin allowed by default
-	// - GET,POST, PUT, HEAD methods
-	// - Credentials share disabled
-	// - Preflight requests cached for 12 hours
-	config := cors.DefaultConfig()
-	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
-	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Register", "Authorization"}
-	config.AllowAllOrigins = true
-	//config.AllowOrigins = []string{"http://localhost:8080", "http://192.168.1.6:1535"}
-	// config.AllowOrigins == []string{"http://google.com", "http://facebook.com"}
-	r.Use(cors.New(config))
+	r.Use(cors.New(*middleware.CoresConfig()))
 
 	r.Static("/static", "./static")
 
@@ -55,10 +45,12 @@ func New() *gin.Engine {
 		v1.DELETE("/games/:key", middleware.AdminAndOwnerAccessToken(), controllerV1.DestroyGame)
 
 		//Create rule
-		v1.POST("/rules", controllerV1.CreateRule)
+		v1.POST("/rules", middleware.AdminAndOwnerAccessToken(), controllerV1.CreateRule)
 
 		//Create tournament
-		v1.POST("/tournaments", controllerV1.CreateTournament)
+		v1.POST("/tournaments", middleware.AdminAndOwnerAccessToken(), controllerV1.CreateTournament)
+		//Find all tournaments
+		v1.GET("/tournaments/:game", controllerV1.FindAllTournaments)
 	}
 
 	return r
