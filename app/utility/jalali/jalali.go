@@ -113,6 +113,7 @@ func IsLeap(t time.Time) bool {
 //
 // Example:
 // 		jalali.Strftime("Printed on %Y/%m/%d", time.Now())   #=> "Printed on 1392/04/02"
+
 func Strftime(format string, t time.Time) string {
 	jyear, jmonth, jday := Gtoj(t)
 	output := format

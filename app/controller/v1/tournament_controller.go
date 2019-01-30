@@ -6,7 +6,6 @@ import (
 	"Server/app/model/database"
 	"Server/app/response"
 	"Server/app/utility"
-	"Server/app/utility/jalali"
 	"github.com/arangodb/go-driver"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -40,7 +39,7 @@ func CreateTournament(c *gin.Context) {
 	t := time.Now().Unix()
 
 	ticket := tournament.Ticket
-	quantity := tournament.Quantity
+	count := tournament.Count
 
 	if ticket == 0 {
 		tournament.Sum = 0
@@ -49,9 +48,9 @@ func CreateTournament(c *gin.Context) {
 		tournament.Award = 0
 	} else {
 		percent, _ := strconv.Atoi(c.PostForm("percentage"))
-		total := ticket * quantity
+		total := ticket * count
 		tournament.Percentage = "%" + strconv.Itoa(percent)
-		tournament.Award = total - (((ticket * quantity) * percent) / 100)
+		tournament.Award = total - (((ticket * count) * percent) / 100)
 		tournament.Income = total - tournament.Award
 		tournament.Sum = total
 	}
@@ -123,24 +122,8 @@ func FindAllTournaments(c *gin.Context) {
 
 		pages := utility.Pages(count, constants.TournamentsCount)
 
-		var tournaments []map[string]interface{}
-
 		//Remove some data for json
-		for i, v := range tournamentsDoc {
-
-			delete(tournamentsDoc[i], "_id")
-			delete(tournamentsDoc[i], "_rev")
-			delete(tournamentsDoc[i], "approved")
-			tournamentsDoc[i]["key"] = v["_key"]
-			delete(tournamentsDoc[i], "_key")
-
-			utc, _ := time.LoadLocation("UTC")
-			t := time.Unix(int64(v["created_at"].(float64)), 0)
-			t = t.In(utc)
-			tournamentsDoc[i]["date"] = jalali.Strftime("%A, %e %b %Y %H:%M", t)
-
-			tournaments = append(tournaments, tournamentsDoc[i])
-		}
+		tournaments := utility.RefactorResponse(tournamentsDoc)
 
 		if tournaments == nil {
 			c.JSON(http.StatusOK, &response.Data{
