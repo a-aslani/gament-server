@@ -1,4 +1,4 @@
-package controllerV1
+package controllerApiV1
 
 import (
 	"Server/app/constants"
@@ -232,7 +232,7 @@ func CreateUser(c *gin.Context) {
 	}
 
 	if imageFile != nil {
-		isUpload, path, errMsg := utility.UploadImage(imageFile, constants.ImageUser)
+		isUpload, path, errMsg := utility.InitUploadImage(imageFile, constants.ImageUserFolder)
 		if !isUpload {
 			c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: errMsg}})
 			return
@@ -247,7 +247,7 @@ func CreateUser(c *gin.Context) {
 
 		user.Image = path
 	} else {
-		user.Image = constants.DefaultAvatarPath
+		user.Image = constants.DefaultAvatarImagePath
 	}
 
 	t := time.Now().Unix()

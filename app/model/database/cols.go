@@ -23,8 +23,12 @@ var (
 	tournamentsCollection     driver.Collection
 	onceGamesEdgeCollection   sync.Once
 	gamesEdgeCollection       driver.Collection
-	onceRulesCollection   sync.Once
-	rulesCollection       driver.Collection
+	onceRulesCollection       sync.Once
+	rulesCollection           driver.Collection
+	onceTeamsCollection       sync.Once
+	teamsCollection           driver.Collection
+	onceTeamsEdgeCollection   sync.Once
+	teamsEdgeCollection       driver.Collection
 )
 
 // Get users collection
@@ -82,6 +86,17 @@ func GamesEdge() driver.Collection {
 	return gamesEdgeCollection
 }
 
+//Get games_edge edge
+func TeamsEdge() driver.Collection {
+	onceGamesEdgeCollection.Do(func() {
+		ctx := context.Background()
+		collection, err := DB().Collection(ctx, constants.TeamsEdge)
+		utility.CheckErr(err)
+		gamesEdgeCollection = collection
+	})
+	return gamesEdgeCollection
+}
+
 //Get games collection
 func Games() driver.Collection {
 	onceGamesCollection.Do(func() {
@@ -109,6 +124,17 @@ func Rules() driver.Collection {
 	onceRulesCollection.Do(func() {
 		ctx := context.Background()
 		collection, err := DB().Collection(ctx, constants.Rules)
+		utility.CheckErr(err)
+		rulesCollection = collection
+	})
+	return rulesCollection
+}
+
+//Get teams collection
+func Teams() driver.Collection {
+	onceRulesCollection.Do(func() {
+		ctx := context.Background()
+		collection, err := DB().Collection(ctx, constants.Teams)
 		utility.CheckErr(err)
 		rulesCollection = collection
 	})

@@ -4,11 +4,13 @@ const (
 	Users       = "users"
 	Phones      = "phones"
 	Codes       = "codes"
-	UsersEdge   = "users_edge"
-	GamesEdge   = "games_edge"
 	Games       = "games"
 	Tournaments = "tournaments"
 	Rules       = "rules"
+	Teams       = "teams"
+	UsersEdge   = "users_edge"
+	GamesEdge   = "games_edge"
+	TeamsEdge   = "teams_edge"
 
 	SingleEliminationTournament = 1
 	GroupEliminationTournament  = 2

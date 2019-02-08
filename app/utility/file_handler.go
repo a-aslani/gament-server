@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func UploadImage(file *multipart.FileHeader, folder string) (bool ,string, string) {
+func InitUploadImage(file *multipart.FileHeader, folder string) (bool ,string, string) {
 
 	arrayOfFileName := strings.Split(file.Filename, ".")
 
@@ -20,7 +20,7 @@ func UploadImage(file *multipart.FileHeader, folder string) (bool ,string, strin
 
 	//Validation image type
 	if _, ok := imageValidTypes[mimeType]; !ok {
-		return false, "",  "image type error"
+		return false, "",  "فرمت تصویر غیرمجاز میباشد"
 	}
 
 	t := time.Now().Unix()
@@ -30,14 +30,18 @@ func UploadImage(file *multipart.FileHeader, folder string) (bool ,string, strin
 
 	imagePath := "static/assets/images/" + folder + "/" + year + month + "/" + image
 
-	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
-		os.Mkdir("static/assets/images/"+folder+"/"+year+month, os.ModePerm)
+	imageDir := "static/assets/images/" + folder + "/" + year + month
+
+	if _, err := os.Stat(imageDir); os.IsNotExist(err) {
+		if err := os.Mkdir(imageDir, os.ModePerm); err != nil {
+			return false, "",  err.Error()
+		}
 	}
 
 	return true, imagePath, ""
 }
 
-func UploadImageCustom(imageFile *multipart.FileHeader, folder string, width, height uint) (bool ,string, string) {
+func UploadImageWithResize(imageFile *multipart.FileHeader, folder string, width, height uint) (bool ,string, string) {
 
 	arrayOfFileName := strings.Split(imageFile.Filename, ".")
 
@@ -47,7 +51,7 @@ func UploadImageCustom(imageFile *multipart.FileHeader, folder string, width, he
 
 	//Validation image type
 	if _, ok := imageValidTypes[mimeType]; !ok {
-		return false, "",  "فرمت غیرمجاز میباشد"
+		return false, "",  "فرمت تصویر غیرمجاز میباشد"
 	}
 
 	t := time.Now().Unix()
@@ -56,9 +60,12 @@ func UploadImageCustom(imageFile *multipart.FileHeader, folder string, width, he
 	image := year + "_" + month + "_" + strconv.FormatInt(t, 10) + "." + mimeType
 
 	imagePath := "static/assets/images/" + folder + "/" + year + month + "/" + image
+	imageDir := "static/assets/images/" + folder + "/" + year + month
 
-	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
-		os.Mkdir("static/assets/images/"+folder+"/"+year+month, os.ModePerm)
+	if _, err := os.Stat(imageDir); os.IsNotExist(err) {
+		if err := os.Mkdir(imageDir, os.ModePerm); err != nil {
+			return false, "",  err.Error()
+		}
 	}
 
 	file, err := imageFile.Open()
@@ -67,11 +74,12 @@ func UploadImageCustom(imageFile *multipart.FileHeader, folder string, width, he
 	}
 	defer file.Close()
 
-	// decode jpeg into image.Image
+	//Decode jpeg into image.Image
 	img, err := jpeg.Decode(file)
 	if err != nil {
 		return false, "",  err.Error()
 	}
+
 	file.Close()
 
 	m := resize.Resize(width, height, img, resize.Lanczos3)
@@ -82,8 +90,10 @@ func UploadImageCustom(imageFile *multipart.FileHeader, folder string, width, he
 	}
 	defer out.Close()
 
-	// write new image to file
-	jpeg.Encode(out, m, nil)
+	//Write new image to file
+	if err := jpeg.Encode(out, m, nil); err != nil {
+		return false, "",  err.Error()
+	}
 
 	return true, imagePath, ""
 }

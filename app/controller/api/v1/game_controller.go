@@ -1,11 +1,11 @@
-package controllerV1
+package controllerApiV1
 
 import (
 	"Server/app/constants"
 	"Server/app/model"
 	"Server/app/response"
 	"Server/app/utility"
-	"Server/src/src/github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
@@ -44,9 +44,9 @@ func CreateGame(c *gin.Context) {
 	game.Xbox, _ = strconv.ParseBool(c.PostForm("xbox"))
 	game.Mobile, _ = strconv.ParseBool(c.PostForm("mobile"))
 
-	isUploadGameImage, gameImagePath, gameImageErrMsg := utility.UploadImageCustom(imageFile, constants.ImageGame, 350, 195)
-	isUploadGameMobileImage, gameMobileImagePath, gameMobileImageErrMsg := utility.UploadImageCustom(mobileBannerFile, constants.ImageBanner, 350, 340)
-	isUploadGameWebImage, gameWebImagePath, gameWebImageErrMsg := utility.UploadImageCustom(webBannerFile, constants.ImageBanner, 1600, 240)
+	isUploadGameImage, gameImagePath, gameImageErrMsg := utility.UploadImageWithResize(imageFile, constants.ImageGameFolder, 350, 195)
+	isUploadGameMobileImage, gameMobileImagePath, gameMobileImageErrMsg := utility.UploadImageWithResize(mobileBannerFile, constants.ImageBannerFolder, 350, 340)
+	isUploadGameWebImage, gameWebImagePath, gameWebImageErrMsg := utility.UploadImageWithResize(webBannerFile, constants.ImageBannerFolder, 1600, 240)
 
 
 	if !isUploadGameImage {
@@ -99,7 +99,7 @@ func FindGame(c *gin.Context) {
 
 	c.JSON(http.StatusOK, &response.Data{
 		Data: &response.FindDocument{
-			Document: game,
+			Document: utility.RefactorResponseDoc(game, false),
 		},
 		State: true,
 	})
@@ -160,7 +160,7 @@ func UpdateGame(c *gin.Context) {
 	}
 
 	if imageFile != nil {
-		isUpload, path, errMsg := utility.UploadImage(imageFile, constants.ImageGame)
+		isUpload, path, errMsg := utility.InitUploadImage(imageFile, constants.ImageGameFolder)
 		if !isUpload {
 			c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: errMsg}})
 			return
@@ -174,7 +174,7 @@ func UpdateGame(c *gin.Context) {
 	}
 
 	if mobileBannerFile != nil {
-		isUpload, path, errMsg := utility.UploadImage(mobileBannerFile, constants.ImageBanner)
+		isUpload, path, errMsg := utility.InitUploadImage(mobileBannerFile, constants.ImageBannerFolder)
 		if !isUpload {
 			c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: errMsg}})
 			return
@@ -188,7 +188,7 @@ func UpdateGame(c *gin.Context) {
 	}
 
 	if webBannerFile != nil {
-		isUpload, path, errMsg := utility.UploadImage(webBannerFile, constants.ImageBanner)
+		isUpload, path, errMsg := utility.InitUploadImage(webBannerFile, constants.ImageBannerFolder)
 		if !isUpload {
 			c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: errMsg}})
 			return
@@ -221,7 +221,7 @@ func UpdateGame(c *gin.Context) {
 	//Update game
 	err = model.Update(key, &game)
 	if driver.IsNotFound(err) || err != nil {
-		c.JSON(http.StatusInternalServerError, &response.Data{Data: &response.ServerError{Message: "بازی پیدا نشد. خطا در ویرایش بازی"}})
+		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ServerError{Message: "بازی پیدا نشد. خطا در ویرایش بازی"}})
 		return
 	}
 
@@ -239,7 +239,7 @@ func DestroyGame(c *gin.Context) {
 	key := c.Param("key")
 	err := model.Destroy(key, &model.Game{})
 	if driver.IsNotFound(err) || err != nil {
-		c.JSON(http.StatusInternalServerError, &response.Data{Data: &response.ServerError{Message: "بازی پیدا نشد. خطا در حذف کردن بازی"}})
+		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ServerError{Message: "بازی پیدا نشد. خطا در حذف کردن بازی"}})
 		return
 	}
 

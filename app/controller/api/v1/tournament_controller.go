@@ -1,4 +1,4 @@
-package controllerV1
+package controllerApiV1
 
 import (
 	"Server/app/constants"
@@ -6,6 +6,7 @@ import (
 	"Server/app/model/database"
 	"Server/app/response"
 	"Server/app/utility"
+	"Server/app/utility/jalali"
 	"github.com/arangodb/go-driver"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -123,7 +124,7 @@ func FindAllTournaments(c *gin.Context) {
 		pages := utility.Pages(count, constants.TournamentsCount)
 
 		//Remove some data for json
-		tournaments := utility.RefactorResponse(tournamentsDoc)
+		tournaments := refactorTournamentResponse(tournamentsDoc)
 
 		if tournaments == nil {
 			c.JSON(http.StatusOK, &response.Data{
@@ -142,4 +143,39 @@ func FindAllTournaments(c *gin.Context) {
 		})
 	}
 
+}
+
+func refactorTournamentResponse(docs []map[string]interface{}) []map[string]interface{} {
+
+	var newDocs []map[string]interface{}
+
+	for i, v := range docs {
+
+		delete(docs[i], "_id")
+		delete(docs[i], "_rev")
+		docs[i]["key"] = v["_key"]
+		delete(docs[i], "_key")
+
+		if _, ok := docs[i]["approved"]; ok {
+			delete(docs[i], "approved")
+		}
+
+		utc, _ := time.LoadLocation("UTC")
+
+		var t time.Time
+
+		if docs[i]["state"] == 1 {
+			t = time.Unix(int64(v["created_at"].(float64)), 0)
+		} else {
+			t = time.Unix(int64(v["updated_at"].(float64)), 0)
+		}
+
+		t = t.In(utc)
+
+		docs[i]["date"] = jalali.Strftime("%A, %e %b %Y %H:%M", t)
+
+		newDocs = append(newDocs, docs[i])
+	}
+
+	return newDocs
 }

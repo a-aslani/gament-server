@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Gament</title>
+</head>
+<body>
+
+    <p id="username"></p>
+</body>
+
+<script>
+    let url = "ws://localhost:7530/ws/v1/"
+    let ws = new WebSocket(url)
+
+    ws.addEventListener("message", function (e) {
+        console.log(e)
+    })
+</script>
+</html>
