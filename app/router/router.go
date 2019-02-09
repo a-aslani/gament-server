@@ -46,6 +46,8 @@ func New() *gin.Engine {
 		v1.POST("/users", middleware.RegisterAccessToken(), controllerApiV1.CreateUser)
 		//Get user information
 		v1.GET("/users/info", middleware.UserAccessToken(), controllerApiV1.GetUserInfo)
+		//Find all users
+		v1.GET("/users", controllerApiV1.FindAllUsers)
 
 		//Find game
 		v1.GET("/games/:key", controllerApiV1.FindGame)

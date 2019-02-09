@@ -3,6 +3,7 @@ package model
 import (
 	"Server/app/constants"
 	"Server/app/model/database"
+	"Server/app/utility"
 	"context"
 	"github.com/arangodb/go-driver"
 )
@@ -33,8 +34,35 @@ func (user *User) find(key string) (map[string]interface{}, error) {
 
 func (user *User) findAll(count, page int64) ([]map[string]interface{}, error) {
 
-	var u []map[string]interface{}
-	return u, nil
+	query := `FOR v IN ` + constants.Users + ` FILTER v.approved == true LIMIT @offset, @count RETURN v`
+
+	bindVars := map[string]interface{}{
+		"offset": (page - 1) * count,
+		"count":  count,
+	}
+
+	ctx := context.Background()
+
+	cursor, err := database.DB().Query(ctx, query, bindVars)
+	defer cursor.Close()
+
+	var docs []map[string]interface{}
+	if err != nil {
+		return docs, err
+	}
+
+	for {
+		var doc map[string]interface{}
+		_, err := cursor.ReadDocument(ctx, &doc)
+		if driver.IsNoMoreDocuments(err) {
+			break
+		} else if err != nil {
+			utility.CheckErr(err)
+		}
+		docs = append(docs, doc)
+	}
+
+	return docs, nil
 }
 
 func (user *User) create() (driver.DocumentID, error) {

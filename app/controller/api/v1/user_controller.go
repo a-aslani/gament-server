@@ -333,3 +333,44 @@ func GetUserInfo(c *gin.Context) {
 		State: true,
 	})
 }
+
+//Find all users
+func FindAllUsers(c *gin.Context) {
+
+	page, _ := strconv.ParseInt(c.DefaultQuery("page", "1"), 0, 64)
+
+	//find users from db
+	users, err := model.FindAll(constants.UsersCount, page, &model.User{})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, &response.Data{Data: &response.DatabaseError{Message: "کاربری یافت نشد"}})
+		return
+	}
+
+	//check user exist
+	if users == nil {
+		c.JSON(http.StatusBadRequest, &response.Data{Data: &response.ValidationError{Error: "کاربری وجود ندارد"}})
+		return
+	}
+
+	//calculate users count
+	count, err := model.Count(&model.User{})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, &response.Data{Data: &response.DatabaseError{Message: "کاربری پیدا نشد"}})
+		return
+	}
+
+	//calculate total pages
+	pages := utility.Pages(count, constants.UsersCount)
+
+	//refactor data
+	users = utility.RefactorResponseDocs(users, false)
+
+	c.JSON(http.StatusOK, &response.Data{
+		Data: &response.FindAllDocuments{
+			Documents:  users,
+			TotalPages: pages,
+			CurrentPage: page,
+		},
+		State: true,
+	})
+}

@@ -11,4 +11,5 @@ const (
 	TeamToGame       = "team_to_game"
 	UserToTeam       = "user_to_team"
 	TeamToUser       = "team_to_user"
+	UserToFriend     = "user_to_friend"
 )

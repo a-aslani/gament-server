@@ -21,7 +21,6 @@ type Message struct {
 	Message  string `json:"message"`
 }
 
-
 func HandleConnection(c *gin.Context) {
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)

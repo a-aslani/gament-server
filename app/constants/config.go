@@ -1,7 +1,7 @@
 package constants
 
 const (
-	Port                   = ":7530"
+	Port                   = ":8081"
 	CodeActiveTime         = 60 * 3
 	TokenClaims            = "tokenClaims"
 	SecretKey              = "2VyIjoiMjYxNjc3MiIsImV4cCInmREnXhG_hT7x-5ogovqSwNBhq26MTUzNDY4ODc3Nn0"
